@@ -1,0 +1,9 @@
+.classpath
+.project
+bin/
+lib/
+out/
+*.class
+*.log
+*~
+

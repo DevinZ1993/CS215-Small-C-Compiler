@@ -5,7 +5,7 @@ int main()
 {
 	int i,j;
 	int b[2][3];
-	read(main0);
+	write(main0);
 	for(i=0;i<2;++i)
 	{
 		for(j=0;j<3;++j)

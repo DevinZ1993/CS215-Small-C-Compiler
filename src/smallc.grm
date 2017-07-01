@@ -1,0 +1,245 @@
+package com.gmail.devinz1993.smallc.frontend;
+
+import java.io.InputStream;
+
+parser code {:
+    public Parser(InputStream in) {
+        this(new Lexer(in));
+    }
+:};
+
+terminal IDNode     ID, BREAK, CONT, IF;
+terminal CstNode    INT;
+terminal UniOp		NOT, DOUBLE_PLUS, DOUBLE_MINUS, BIT_NOT;
+terminal BinOp     	OR, AND, BIT_OR, BIT_XOR, BIT_AND, EQ, NE, GT, LT, NLT, NGT, SL, SR, PLUS, 
+                	MULT, DIV, MOD;
+terminal Assign		ASSIGN;
+terminal OpAssign	PLUS_ASSIGN, MINUS_ASSIGN, MULT_ASSIGN, DIV_ASSIGN, MOD_ASSIGN,
+                   	AND_ASSIGN, XOR_ASSIGN, OR_ASSIGN, SR_ASSIGN, SL_ASSIGN;
+terminal Term		MINUS;
+terminal	        TYPE, STRUCT, RETURN, ELSE, FOR, SEMI, COMMA, LC, RC,
+					DOT, LP, RP, LB, RB, LOWER_THAN_ELSE;
+
+non terminal Program		PROGRAM; 
+non terminal ExtDefs		EXTDEFS;
+non terminal ExtDef			EXTDEF; 
+non terminal SExtVars		SEXTVARS; 
+non terminal ExtVars		EXTVARS; 
+non terminal StSpec			STSPEC; 
+non terminal Func			FUNC;
+non terminal Paras			PARAS;
+non terminal StmtBlock		STMTBLOCK;
+non terminal Stmts			STMTS;
+non terminal Stmt			STMT;
+non terminal Defs			DEFS;
+non terminal SDefs			SDEFS;
+non terminal SDecs			SDECS;
+non terminal Decs			DECS; 
+non terminal Var			VAR;
+non terminal Init			INIT;
+non terminal Exp			EXP; 
+non terminal Exps			EXPS;
+non terminal LvalExps		LVAL;
+non terminal AssignExps		AEXPS;
+non terminal BinOpExps		BEXPS;
+non terminal UniOpExps		UEXPS;
+non terminal Arrs			ARRS;
+non terminal Args			ARGS;
+
+precedence nonassoc		LOWER_THAN_ELSE;
+precedence nonassoc		ELSE;
+precedence right		ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, MULT_ASSIGN, DIV_ASSIGN, MOD_ASSIGN,
+				        AND_ASSIGN, XOR_ASSIGN, OR_ASSIGN, SR_ASSIGN, SL_ASSIGN;
+precedence left			OR;
+precedence left			AND;
+precedence left			BIT_OR;
+precedence left			BIT_XOR;
+precedence left			BIT_AND;
+precedence left			EQ, NE;
+precedence left			GT, LT, NLT, NGT;
+precedence left			SL, SR;
+precedence left			PLUS, MINUS;
+precedence left			MULT, DIV, MOD;
+precedence right		NOT, DOUBLE_PLUS, DOUBLE_MINUS, BIT_NOT;
+precedence left			DOT, LP, RP, LB, RB;
+
+start with PROGRAM;
+
+
+PROGRAM ::= EXTDEFS:extdefs {: RESULT = new Program(extdefs); :}
+        ;
+
+EXTDEFS ::= EXTDEF:edef EXTDEFS:others {: RESULT = new ExtDefs(edef, others); :}
+		| {: RESULT = null; :}
+		;
+
+EXTDEF  ::= TYPE EXTVARS:vars SEMI {: RESULT = new VarExtDef(vars); :}
+		| STSPEC:spec SEXTVARS:svars SEMI {: RESULT = new StructExtDef(spec, svars); :}
+		| TYPE FUNC:func STMTBLOCK:block {: RESULT = new FuncExtDef(func, block); :}
+		;
+
+SEXTVARS::= ID:id COMMA SEXTVARS:svars {: RESULT = new SExtVars(id, svars); :}
+		| ID:id {: RESULT = new SExtVars(id); :}
+		| {: RESULT = null; :}
+		;
+
+EXTVARS ::= VAR:var ASSIGN INIT:init COMMA EXTVARS:others {: 
+			RESULT = new ExtVars(new VarDef(var, init), others);
+		:}
+		| VAR:var COMMA EXTVARS:others {:
+            RESULT = new ExtVars(new VarDef(var), others);
+		:}
+		| VAR:var ASSIGN INIT:init {:
+            RESULT = new ExtVars(new VarDef(var, init));
+		:}
+		| VAR:var {:
+            RESULT = new ExtVars(new VarDef(var));
+		:}
+		| {:
+            RESULT = null;
+		:}
+		;
+
+STSPEC  ::= STRUCT ID:id LC SDEFS:sdefs RC {: RESULT = new StSpec(id, sdefs); :}
+		| STRUCT LC SDEFS:sdefs RC {: RESULT = new StSpec(sdefs); :}
+		| STRUCT ID:id {: RESULT = new StSpec(id); :}
+		;
+
+FUNC    ::= ID:id LP PARAS:paras RP {: RESULT = new Func(id, paras); :}
+		;
+
+PARAS   ::= TYPE ID:id COMMA PARAS:paras {: RESULT = new Paras(id, paras); :}
+		| TYPE ID:id {: RESULT = new Paras(id); :}
+		| {: RESULT = null; :}
+		;
+
+STMTBLOCK ::= LC DEFS:defs STMTS:stmts RC {: RESULT = new StmtBlock(defs, stmts); :}
+		;
+
+STMTS   ::= STMT:stmt STMTS:stmts {: RESULT = new Stmts(stmt, stmts); :}
+		| {: RESULT = null; :}
+		;
+
+STMT    ::= EXP:exp SEMI {: RESULT = new ExpStmt(exp); :}
+		| STMTBLOCK:stmtBlock {: RESULT = new BlockStmt(stmtBlock); :}
+		| RETURN EXP:exp SEMI {: RESULT = new RetStmt(exp); :}
+		| IF:id LP EXP:exp RP STMT:then ELSE STMT:elseStmt {:
+            RESULT = new IfStmt(id, exp, then, elseStmt);
+		:}
+		| IF:id LP EXP:exp RP STMT:then {:
+            RESULT = new IfStmt(id, exp, then);
+		:} %prec LOWER_THAN_ELSE
+		| FOR LP EXP:init SEMI EXP:test SEMI EXP:inc RP STMT:stmt {:
+            RESULT = new ForStmt(init, test, inc, stmt);
+		:}
+		| CONT:id SEMI {: RESULT = Stmt.newCont(id); :}
+		| BREAK:id SEMI {: RESULT = Stmt.newBreak(id); :}
+		;
+
+DEFS    ::= TYPE DECS:decs SEMI DEFS:defs {: RESULT = new VarDefs(decs, defs); :}
+		| STSPEC:stsPec SDECS:sdecs SEMI DEFS:defs {:
+            RESULT = new StructDefs(stsPec, sdecs, defs);
+		:}
+		| {: RESULT = null; :}
+		;
+
+SDEFS   ::= TYPE SDECS:sdecs SEMI SDEFS:sdefs {:
+            RESULT = new SDefs(sdecs, sdefs);
+		:}
+		| {: RESULT = null; :}
+		;
+
+SDECS   ::= ID:id COMMA SDECS:sdecs {: RESULT = new SDecs(id, sdecs); :}
+		| ID:id {: RESULT = new SDecs(id); :}
+		;
+
+DECS    ::= VAR:var ASSIGN INIT:init COMMA DECS:decs {:
+            RESULT = new Decs(new VarDef(var,init), decs);
+		:}
+		| VAR:var COMMA DECS:decs {:
+            RESULT = new Decs(new VarDef(var), decs); 
+		:}
+		| VAR:var ASSIGN INIT:init {:
+            RESULT = new Decs(new VarDef(var,init), null);
+		:}
+		| VAR:var {:
+            RESULT = new Decs(new VarDef(var), null);
+		:}
+		;
+
+VAR     ::= ID:id {: RESULT = new Var(id); :}
+		| VAR:var LB INT:len RB {: RESULT = new Var(var, len); :}
+		;
+
+INIT    ::= EXP:exp {: RESULT = new ExpInit(exp); :}
+		| LC ARGS:args RC {: RESULT = new ArgInit(args); :}
+		;
+
+EXP     ::= EXPS:exps {: RESULT = new Exp(exps); :}
+		| {: RESULT = null; :}
+		;
+
+EXPS    ::= LVAL:lval {: RESULT = lval; :}
+		| AEXPS:aexps {: RESULT = aexps; :}
+		| BEXPS:bexps {: RESULT = bexps; :}
+		| UEXPS:uexps {: RESULT = uexps; :} %prec NOT
+		| LP EXPS:exps RP {: RESULT = exps; :}
+		| ID:id LP ARGS:args RP {: RESULT = new FuncExps(id, args); :}
+		| INT:cst {: RESULT = new IntExps(cst); :}
+		;
+
+LVAL	::= ID:id ARRS:arrs {: RESULT = new ArrExps(id, arrs); :}
+	 	| ID:strt DOT ID:field {: RESULT = new DotExps(strt, field); :}
+	 	;
+
+AEXPS	::= LVAL:a ASSIGN:op EXPS:b {: RESULT = new AssignExps(a, op, b); :}
+		| LVAL:a PLUS_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a MINUS_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a MULT_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a DIV_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a MOD_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :} 
+		| LVAL:a AND_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a XOR_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a OR_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a SR_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		| LVAL:a SL_ASSIGN:op EXPS:b {: RESULT = new OpAssignExps(a, op, b); :}
+		;
+
+BEXPS	::= EXPS:a OR:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a AND:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a BIT_OR:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a BIT_XOR:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a BIT_AND:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a NE:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a EQ:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a GT:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a LT:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a NGT:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a NLT:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a SL:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a SR:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a PLUS:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a MINUS:op EXPS:b {:
+            RESULT = new BinOpExps(a, new BinOp("-", op.line, op.col), b);
+		:}
+		| EXPS:a MULT:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a DIV:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		| EXPS:a MOD:op EXPS:b {: RESULT = new BinOpExps(a, op, b); :}
+		;
+
+UEXPS	::= DOUBLE_PLUS:op EXPS:exps {: RESULT  = new UniOpExps(op, exps); :}
+		| DOUBLE_MINUS:op EXPS:exps {: RESULT = new UniOpExps(op, exps); :}
+		| MINUS:op EXPS:exps {: 
+			RESULT = new UniOpExps(new UniOp("-", op.line, op.col), exps);
+		:} %prec NOT
+		| NOT:op EXPS:exps {: RESULT = new UniOpExps(op, exps); :}
+		| BIT_NOT:op EXPS:exps {: RESULT = new UniOpExps(op, exps); :}
+		;
+
+ARRS    ::= LB EXP:exp RB ARRS:arrs {: RESULT = new Arrs(exp, arrs); :}
+		| {: RESULT = null; :}
+		;
+
+ARGS    ::= EXP:exp COMMA ARGS:args {: RESULT = new Args(exp, args); :}
+		| EXP:exp {: RESULT = new Args(exp); :}
+		;

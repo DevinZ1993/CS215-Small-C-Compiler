@@ -1,0 +1,252 @@
+// Type Error:
+
+/*
+int var_undefined()
+{
+	read(x);
+	return 0;
+}
+*/
+
+// Parsing Complete:
+
+int nested_scope()
+{
+	int x;
+	read(x);
+	if (1) {
+		int x;
+	}
+	return 0;
+}
+
+// Type Error:
+
+/*
+int func_undefined()
+{
+	int x;
+	x = undefined_func();
+	return 0;
+}
+*/
+
+
+// Parsing Complete:
+
+int max(int x, int y)
+{
+	if (x<y) {
+		return y;
+	} else {
+		return x;
+	}
+}
+
+int func_call()
+{
+	int x, y;
+	x = 1;
+	y = 2;
+	return max(x,y);
+}
+
+// Type Error:
+
+/*
+int struct_undefined()
+{
+	struct student x;
+	return 0;
+}
+*/
+
+// Parsing Complete:
+
+struct Student {
+	int id, gpa;
+};
+
+int struct_defined()
+{
+	struct Student x;
+	read(x.id);
+	write(x.gpa);
+	return 0;
+}
+
+// Type Error:
+
+/*
+int var_redefined()
+{
+	int x = 1;
+	int x;
+	return 0;
+}
+*/
+
+// Parsing Complete:
+
+int some_var = 0;
+
+int nested_some_var(int some_var)
+{
+	read(some_var);
+	for (; ;) {
+		int some_var = 10;
+		write(some_var);
+	}
+	write(some_var);
+	return 0;
+}
+
+// Type Error:
+
+/*
+int funct_redefined(int x)
+{
+	return 1;
+}
+
+int funct_redefined(int y)
+{
+	return 2;
+}
+*/
+
+// Parsing Complete:
+
+int funct_overload()
+{
+	return 0;
+}
+
+int funct_overload(int x)
+{
+	return x;
+}
+
+// Type Error:
+
+/*
+struct struct_redefined {
+	int a;
+}a;
+
+struct struct_redefined {
+	int b;
+} c, d;
+*/
+
+// Parsing Complete:
+
+struct some_struct {
+	int field;
+} some_struct_var;
+
+int in_some_funct()
+{
+	struct some_struct {
+		int another_field;
+	} some_struct_var, other_var;
+	return 0;
+}
+
+// Type Error:
+
+/*
+int funct_with_2_params(int a, int b)
+{
+	return a+b;
+}
+
+int caller()
+{
+	return funct_with_2_params(1);
+}
+*/
+
+// Type Error:
+
+/*
+int array_index()
+{
+	int arr1[10] = {1,2,3,4,5,6,7,8,9,10,11};
+	int arr2[100][100];
+	int arr3[10][10][10];
+	int i, j, k;
+	for (i=0; i<10; ++i) {
+		write(arr1[i]);
+	}
+	for (i=0; i<100; ++i) {
+		for (j=0; j<100; ++j) {
+			write(arr2[i][j]);
+		}
+	}
+	for (i=0; i<10; ++i) {
+		for (j=0; j<10; ++j) {
+			for (k=0; k<10; ++k) {
+				write(arr3[i][j][k]);
+			}
+		}
+	}
+	//read(arr1[0][0]);
+	//write(arr3[0]);
+	return 0;
+}
+*/
+
+// Type Error:
+
+/*
+struct yet_another_struct {
+	int a;
+};
+
+int int_is_not_struct()
+{
+	int x;
+	write(x.a);
+	return 0;
+}
+*/
+
+// Type Error:
+
+/*
+int break_in_wrong_place()
+{
+	break;
+	return 0;
+}
+*/
+
+// Type Error:
+
+/*
+int if_condition()
+{
+	for(;;);
+	if() {
+		return 0;
+	}
+	return 1;
+}
+*/
+
+// Type Error:
+
+/*
+int nonint_in_exp() {
+	struct Student {
+		int id;
+	} xiaoMing;
+	return 1+xiaoMing;
+}
+*/
+
+int main()
+{
+	return 0;
+}

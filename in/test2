@@ -1,9 +1,15 @@
 int a,b;
 
+
 int gcd(int x,int y)
 {
-	if(!y)
+	//write(x);
+	//write(y);
+	if(!y) {
+		//write(1000);
 		return x;
+	}
+	//write(2000);
 	return gcd(y,x%y);
 }
 

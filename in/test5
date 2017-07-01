@@ -30,6 +30,7 @@ int main()
 	int i=0;
 	int temp;
 	read(i);
+	write(i);
 	for(;i>=0;--i)
 	{
 		read(temp);
